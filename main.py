@@ -3,8 +3,12 @@ from  telegram import Update
 from telegram.ext import Application,CommandHandler,MessageHandler,filters, ContextTypes
 import random
 
-TOKEN: Final = '6936061097:AAG5c-uAi4GzpVlj6Gncpviec4NO0bR1D0Q'
-BOT_USERNAME: Final = '@summa_oru_bot'
+if not os.path.exists("config.py"):
+    print("Please create a config.py from config_template.py with your BOT_TOKEN")
+    exit(1)
+
+from config import BOT_TOKEN, WELCOME_MESSAGE, HELP_MESSAGE
+
 
 async def start_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f'Hello! hi i think you also was very board as like me.')   
