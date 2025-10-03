@@ -8,11 +8,9 @@ The bot responds to messages, handles commands, and can be easily extended.
 - [Features](features)
 - [Tech Stack](tech-stack)
 - [Installation](installation)
-- [Project Working]()
-- [Usage]()
-- [Configuration]()
-- [Future Enhancements]()
-- [License]()
+- [Project Working](project-working)
+- [Configuration](configuration)
+- [License](license)
 
 ## Features
 - Responds to /start and /help commands
@@ -79,3 +77,15 @@ The bot works as follows:
 
     - Your real `config.py` contains the token and bot name.
     - `.gitignore` ensures it is never pushed to GitHub.
+
+## Configuration
+
+- config_template.py → included in the repo, safe for public
+
+- config.py → your private config, never push
+
+- Example config.py content:
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
