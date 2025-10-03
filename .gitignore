@@ -1,0 +1,4 @@
+# Ignore config.py to keep your token safe
+config.py
+__pycache__/
+*.pyc
