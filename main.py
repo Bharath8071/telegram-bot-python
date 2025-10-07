@@ -8,7 +8,7 @@ if not os.path.exists("config.py"):
     print("Please create a config.py from config_template.py with your BOT_TOKEN")
     exit(1)
 
-from config import BOT_TOKEN, WELCOME_MESSAGE, HELP_MESSAGE
+from config import BOT_TOKEN, BOT_NAME
 
 async def start_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f'Hello! hi i think you also was very board as like me.')   
