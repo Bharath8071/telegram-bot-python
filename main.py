@@ -9,6 +9,8 @@ if not os.path.exists("config.py"):
     exit(1)
 
 from config import BOT_TOKEN, BOT_NAME
+TOKEN: Final = BOT_TOKEN
+BOT_USERNAME: Final = BOT_NAME
 
 async def start_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f'Hello! hi i think you also was very board as like me.')   
