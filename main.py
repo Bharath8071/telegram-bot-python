@@ -1,21 +1,19 @@
 from typing import Final
-from  telegram import Update 
-from telegram.ext import Application,CommandHandler,MessageHandler,filters, ContextTypes
-import random
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from flask import Flask, request
+import os, random
 
-if not os.path.exists("config.py"):
-    print("Please create a config.py from config_template.py with your BOT_TOKEN")
-    exit(1)
+TOKEN: Final = os.getenv("BOT_TOKEN")  # safer than hardcoding
+BOT_USERNAME: Final = '@summa_oru_bot'
 
-from config import BOT_TOKEN, WELCOME_MESSAGE, HELP_MESSAGE
+# --- Telegram Handlers ---
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello! I think you’re as bored as me 😄")
 
-
-async def start_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f'Hello! hi i think you also was very board as like me.')   
-
-async def help_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     random_set = random.choice([True, False])
-    if random_set == True :
+    if random_set:
         help_text = (
             "Hi! I can respond to simple messages like:\n"
             "- 'hello' → I will say hi back!\n"
@@ -26,61 +24,64 @@ async def help_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
             "/bye → Say goodbye to the bot\n"
             "/stop → Stop the bot (admin only)"
         )
-        
-    else: help_text="sorry!! no time"
-    
-    await update.message.reply_text(f'{help_text}')
+    else:
+        help_text = "Sorry!! no time 😅"
 
-async def bye_command(update:Update,context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f'bye!! see you later')
-    exit(0)
+    await update.message.reply_text(help_text)
 
-def handle_response (text):
-    user_input = text.lower()
+async def bye_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Bye!! See you later 👋")
 
-    if 'hello' in  user_input:
+def handle_response(text: str) -> str:
+    text = text.lower()
+    if 'hello' in text:
         return 'Hey there!'
-    if 'how are you' in  user_input:
+    if 'how are you' in text:
         return 'I am good!'
-    
-    return 'I do not understand what you wrote'
+    return 'I do not understand what you wrote 🤔'
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message_type: str = update.message.chat.type
-    text: str = update.message.text
-
-    print(f'User ({update.message.chat.id}) in {message_type}: "{text}"')
-
-    if message_type == 'group':
-        if BOT_USERNAME in text:
-            new_text: str = text.replace(BOT_USERNAME, '').strip()
-            response: str = handle_response(new_text)
-        else:
-            return
-    else:
-        response: str = handle_response(text)
-    
-    print('Bot:', response)
+    text = update.message.text
+    response = handle_response(text)
     await update.message.reply_text(response)
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f'Update {update} caused error {context.error}')
 
 
+# --- Flask App for Render ---
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "Bot is running!"
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.update_queue.put_nowait(update)
+    return "ok"
+
+
+# --- Telegram Bot Setup ---
+application = Application.builder().token(TOKEN).build()
+
+application.add_handler(CommandHandler('start', start_command))
+application.add_handler(CommandHandler('help', help_command))
+application.add_handler(CommandHandler('bye', bye_command))
+application.add_handler(MessageHandler(filters.TEXT, handle_message))
+application.add_error_handler(error)
+
+# --- Start Webhook ---
 if __name__ == '__main__':
-    print("stating....")
-    app = Application.builder().token(TOKEN).build()
+    PORT = int(os.environ.get("PORT", 5000))
+    URL = f"https://{os.environ.get('RENDER_EXTERNAL_URL')}/webhook"
 
+    # set webhook dynamically on startup
+    import asyncio
+    async def set_webhook():
+        await application.bot.set_webhook(URL)
+        print(f"Webhook set to {URL}")
 
-    app.add_handler(CommandHandler('start',start_command))
-    app.add_handler(CommandHandler('help',help_command))
-    app.add_handler(CommandHandler('bye',bye_command))
-   # app.add_handler(MessageHandler(filters.text,handle_message))
-
-    app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    app.add_error_handler(error)
-
-    print("poling.....")
-
-    app.run_polling(poll_interval=3)
+    asyncio.run(set_webhook())
+    app.run(host="0.0.0.0", port=PORT)
